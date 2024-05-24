@@ -1,6 +1,8 @@
 from fastapi import FastAPI, File, UploadFile
 import os
 
+from utils import validate_file_type
+
 app = FastAPI()
 
 UPLOAD_DIRECTORY = "./uploads"
@@ -12,6 +14,7 @@ async def root():
 
 @app.post("/upload_image")
 async def upload_image(file: UploadFile = File(...)):
+    validate_file_type(file.file)
     try:
         file_path = os.path.join(UPLOAD_DIRECTORY, file.filename)
         with open(file_path, "wb") as buffer:
