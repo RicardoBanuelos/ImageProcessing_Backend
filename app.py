@@ -4,6 +4,7 @@ import glob
 import uuid
 from utils import validate_file_type
 from fastapi import FastAPI, File, UploadFile
+from fastapi.responses import FileResponse
 
 import uvicorn
 
@@ -60,7 +61,7 @@ async def resize_image(width: str, height: str, filename: str):
     resized_image_path = os.path.join(RESIZED_DIRECTORY, filename)
     cv2.imwrite(resized_image_path, resized_image)
     
-    return {"message" : "resized image: " + filename}
+    return FileResponse(resized_image_path)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
