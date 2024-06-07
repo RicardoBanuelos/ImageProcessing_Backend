@@ -77,11 +77,11 @@ async def resize_image(width: str, height: str, filename: str):
         img_data = image_file.read()
 
     encoded_string = base64.b64encode(img_data).decode('utf-8')
-    
+
     os.remove(temp_resized_image_path)
     os.remove(os.path.join(UPLOAD_DIRECTORY, filename))
     
-    return {"image" : encoded_string}
+    return {"image" : "data:image/[type];base64," + encoded_string}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
