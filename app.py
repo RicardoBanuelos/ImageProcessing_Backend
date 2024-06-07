@@ -1,6 +1,7 @@
 import os
 import cv2 
 import uuid
+import base64
 
 from utils import validate_file_type
 
@@ -69,10 +70,18 @@ async def resize_image(width: str, height: str, filename: str):
 
     resized_image = cv2.resize(image, (new_width, new_height), interpolation=cv2.INTER_LINEAR)
 
-    resized_image_path = os.path.join(RESIZED_DIRECTORY, filename)
-    cv2.imwrite(resized_image_path, resized_image)
+    temp_resized_image_path  = os.path.join(RESIZED_DIRECTORY, filename)
+    cv2.imwrite(temp_resized_image_path , resized_image)
+
+    with open(temp_resized_image_path , 'rb') as image_file:
+        img_data = image_file.read()
+
+    encoded_string = base64.b64encode(img_data).decode('utf-8')
     
-    return FileResponse(resized_image_path)
+    os.remove(temp_resized_image_path)
+    os.remove(os.path.join(UPLOAD_DIRECTORY, filename))
+    
+    return {"image" : encoded_string}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
