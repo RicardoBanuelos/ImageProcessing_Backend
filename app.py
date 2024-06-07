@@ -1,17 +1,28 @@
 import os
 import cv2 
-import glob
 import uuid
+
 from utils import validate_file_type
+
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 import uvicorn
 
-app = FastAPI()
-
 UPLOAD_DIRECTORY = "./uploads"
 RESIZED_DIRECTORY = "./resized_images"
+
+app = FastAPI()
+
+# Add CORSMiddleware to the application
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # List of allowed origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 os.makedirs(UPLOAD_DIRECTORY, exist_ok=True)
 
