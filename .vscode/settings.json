@@ -1,0 +1,8 @@
+{
+    "python.autoComplete.extraPaths": [
+        "C:\\Users\\Ricardo\\miniconda3\\envs\\image_processing_backend\\Lib\\site-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "C:\\Users\\Ricardo\\miniconda3\\envs\\image_processing_backend\\Lib\\site-packages"
+    ]
+}
