@@ -100,50 +100,6 @@ async def blur(kernel_width: str, kernel_height: str, filename: str):
 
     return {"image" : "data:image/[type];base64," + encoded_string}
 
-@app.get("/gaussian_blur")
-async def gaussian_blur(kernel_width: str, kernel_height: str, sigmaX: str, filename: str):
-    if(not kernel_width.isdigit() or not kernel_height.isdigit() or not sigmaX.isdigit()):
-        return HTTPException(status_code=400, detail="Invalid dimensions.")    
-    
-    k_width = int(kernel_width)
-    k_height = int(kernel_height)
-    sigma = int(sigmaX)
-
-    image_path = os.path.join(UPLOAD_DIRECTORY, filename)
-    image = read_image(image_path)
-
-    blurred_image = cv2.GaussianBlur(image, (k_width, k_height), sigma)
-    temp_blurred_image_path  = os.path.join(PROCESSED_DIRECTORY, filename)
-    cv2.imwrite(temp_blurred_image_path , blurred_image)
-
-    encoded_string = encodeToBase64(temp_blurred_image_path)
-
-    os.remove(temp_blurred_image_path)
-    os.remove(os.path.join(UPLOAD_DIRECTORY, filename))
-
-    return {"image" : "data:image/[type];base64," + encoded_string}
-
-@app.get("/median_blur")
-async def median_blur(percentage: str, filename: str):
-    if(not percentage.isdigit()):
-        return HTTPException(status_code=400, detail="Invalid dimensions.")    
-    
-    p = int(percentage)
-
-    image_path = os.path.join(UPLOAD_DIRECTORY, filename)
-    image = read_image(image_path)
-
-    blurred_image = cv2.medianBlur(image, p)
-    temp_blurred_image_path  = os.path.join(PROCESSED_DIRECTORY, filename)
-    cv2.imwrite(temp_blurred_image_path , blurred_image)
-
-    encoded_string = encodeToBase64(temp_blurred_image_path)
-
-    os.remove(temp_blurred_image_path)
-    os.remove(os.path.join(UPLOAD_DIRECTORY, filename))
-
-    return {"image" : "data:image/[type];base64," + encoded_string}
-
 @app.get("/grayscale")
 async def grayscale_image(filename: str):
     image_path = os.path.join(UPLOAD_DIRECTORY, filename)
