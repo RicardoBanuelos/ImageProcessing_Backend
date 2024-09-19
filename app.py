@@ -1,7 +1,8 @@
 import os
 import cv2 
 import uuid
-import base64
+
+import pytesseract
 
 from utils import validate_file_type, read_image, encodeToBase64
 
@@ -115,6 +116,50 @@ async def grayscale_image(filename: str):
     os.remove(os.path.join(UPLOAD_DIRECTORY, filename))
 
     return {"image" : "data:image/[type];base64," + encoded_string}
+
+@app.get("/extract_text")
+async def extract_text(filename: str):
+    image_path = os.path.join(UPLOAD_DIRECTORY, filename)
+    image = read_image(image_path)
+
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    edges = cv2.Canny(gray, 100, 200)
+    thresh = cv2.adaptiveThreshold(edges, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 11, 2)
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # Filter contours
+    min_area = 100
+    max_area = 5000  # Maximum area for text regions
+    aspect_ratio_min = 0.5  # Minimum aspect ratio (width / height)
+    contour_count_threshold = 5
+    
+    filtered_contours = []
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        x, y, w, h = cv2.boundingRect(contour)
+        
+        # Check area and aspect ratio
+        if min_area < area < max_area and w/h > aspect_ratio_min:
+            # Calculate aspect ratio
+            aspect_ratio = float(w) / h
+            
+            # Check contour count
+            contour_count = len(cv2.approxPolyDP(contour, 3.0, True))
+            if contour_count >= contour_count_threshold:
+                filtered_contours.append((contour, area, aspect_ratio))
+    
+    # Draw bounding rectangles around detected text
+    image_copy = image.copy()
+    for contour, _, _ in filtered_contours:
+        x, y, w, h = cv2.boundingRect(contour)
+        cv2.rectangle(image_copy, (x, y), (x+w, y+h), (0, 255, 0), 2)
+
+    # Perform OCR on the entire image
+    text = pytesseract.image_to_string(image, lang='eng', config='--psm 6')
+
+    os.remove(os.path.join(UPLOAD_DIRECTORY, filename))
+
+    return {"text" : text.replace("\n", " ")}
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
