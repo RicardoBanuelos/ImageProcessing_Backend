@@ -122,6 +122,8 @@ async def extract_text(filename: str):
     image_path = os.path.join(UPLOAD_DIRECTORY, filename)
     image = read_image(image_path)
 
+    gray_image = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
     edges = cv2.Canny(gray, 100, 200)
     thresh = cv2.adaptiveThreshold(edges, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY_INV, 11, 2)
@@ -158,8 +160,31 @@ async def extract_text(filename: str):
 
     os.remove(os.path.join(UPLOAD_DIRECTORY, filename))
 
-    return {"text" : text.replace("\n", " ")}
+    return {"text" : text}
 
+@app.get("/detect_faces")
+async def detect_faces(filename: str):
+    image_path = os.path.join(UPLOAD_DIRECTORY, filename)
+    image = read_image(image_path)
+
+    gray_image = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+
+    face_classifier = cv2.CascadeClassifier(
+        cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
+    )
+
+    face = face_classifier.detectMultiScale(
+        gray_image, scaleFactor=1.1, minNeighbors=5, minSize=(40, 40)
+    )
+
+    for (x, y, w, h) in face:
+        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 4)
+
+    detected_faces_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    detected_faces_image_path  = os.path.join(PROCESSED_DIRECTORY, filename)
+    cv2.imwrite(detected_faces_image_path , detected_faces_image)
+
+    return {"Message" : "Success"}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
